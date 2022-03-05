@@ -3,6 +3,8 @@ package org.pmv.customer;
 import lombok.AllArgsConstructor;
 import org.pmv.clients.fraud.FraudCheckResponse;
 import org.pmv.clients.fraud.FraudClient;
+import org.pmv.clients.notifications.NotificationClient;
+import org.pmv.clients.notifications.NotificationRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -13,6 +15,7 @@ public class CustomerService {
     private final CustomerRepository customerRepository;
     private final RestTemplate restTemplate;
     private final FraudClient fraudClient;
+    private final NotificationClient notificationClient;
 
     public void registerCustomer(CustomerRegistrationRequest request) {
         Customer customer = Customer.builder()
@@ -37,7 +40,12 @@ public class CustomerService {
 
         if(response.isFraudster()){
             throw new IllegalStateException("fraudster customer");
+        } else {
+            // todo: send notification
+            // todo: make it async. add to queue
+            NotificationRequest notificationRequest =
+                    new NotificationRequest(customer.getId(),customer.getEmail(),String.format("Hi %s, welcome!!",customer.getFirstName()));
+            notificationClient.sendNotification(notificationRequest);
         }
-        // todo: send notification
     }
 }
